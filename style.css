@@ -66,4 +66,10 @@ button,
   cursor: pointer;
   text-align: center;
   text-decoration: none;
+  box-sizing: border-box;
+}
+
+button:hover,
+#downloadLink:hover {
+  background-color: #0056b3;
 }

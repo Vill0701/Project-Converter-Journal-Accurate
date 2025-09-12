@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Converter FP to XML</title>
+    <title>Converter FP to XML(Accurate5)</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>Converter Faktur Pajak Keluaran</h1>
+    <main class="container">
+      <h1>Data Faktur Pajak menjadi XML</h1>
+      <p>Masukan nomor akun yang sesuai dengan Database Accurate anda!</p>
+
+      <div class="form-group">
+        <label for="payableAccount">Akun Piutang Usaha :</label>
+        <input type="text" id="payableAccount" />
+        <label for="salesAccount">Akun Penjualan Barang :</label>
+        <input type="text" id="salesAccount" />
+        <label for="salesTaxAccount">Akun PPN Penjualan :</label>
+        <input type="text" id="salesTaxAccount" />
+        <label for="taxInvoiceCSV">Import File CSV :</label>
+        <input type="file" id="taxInvoiceCSV" accept=".csv" />
+      </div>
+      <div class="submit">
+        <button id="convertButton">Konversi ke XML</button>
+      </div>
+
+      <h2>Hasil XML:</h2>
+      <pre><code id="xmlOutput">Hasil konversi akan muncul di sini...</code></pre>
+
+      <a id="downloadLink" class="hidden">Unduh File XML</a>
+    </main>
+
+    <script src="script.js"></script>
   </body>
 </html>

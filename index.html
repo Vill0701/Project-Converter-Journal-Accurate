@@ -10,7 +10,6 @@
     <main class="container">
       <h1>Data Faktur Pajak menjadi XML</h1>
       <p>Masukan nomor akun yang sesuai dengan Database Accurate anda!</p>
-
       <div class="form-group">
         <label for="payableAccount">Akun Piutang Usaha :</label>
         <input type="text" id="payableAccount" />
@@ -19,15 +18,17 @@
         <label for="salesTaxAccount">Akun PPN Penjualan :</label>
         <input type="text" id="salesTaxAccount" />
         <label for="taxInvoiceCSV">Import File CSV :</label>
-        <input type="file" id="taxInvoiceCSV" accept=".csv" />
+        <input type="file" id="taxInvoiceCSV" accept=".CSV" />
+        <button id="convertButton">Konversi ke XML</button>
       </div>
-
-      <button id="convertButton">Konversi ke XML</button>
-
-      <h2>Hasil XML:</h2>
-      <pre><code id="xmlOutput">Hasil konversi akan muncul di sini...</code></pre>
-
-      <a id="downloadLink" class="hidden">Unduh File XML</a>
+      <div class="container-result">
+        <h2>Hasil XML:</h2>
+        <pre><code id="xmlOutput">Hasil konversi akan muncul di sini...</code></pre>
+        <a id="downloadLink" class="hidden">Unduh File XML</a>
+      </div>
+      <div class="container-next-page">
+        <a href="purchase.html" id="purchaseTaxInvoice">Faktur Pajak Masukan</a>
+      </div>
     </main>
 
     <script src="script.js"></script>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Converter FP to XML(Accurate5)</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   </head>
   <body>
     <main class="container">
@@ -17,8 +18,8 @@
         <input type="text" id="salesAccount" />
         <label for="salesTaxAccount">Akun PPN Penjualan :</label>
         <input type="text" id="salesTaxAccount" />
-        <label for="taxInvoiceCSV">Import File CSV :</label>
-        <input type="file" id="taxInvoiceCSV" accept=".CSV" />
+        <label for="taxInvoiceCSV">Import File XLSX :</label>
+        <input type="file" id="taxInvoiceXLSX" accept=".xlsx, .xls" />
         <button id="convertButton">Konversi ke XML</button>
       </div>
       <div class="container-result">

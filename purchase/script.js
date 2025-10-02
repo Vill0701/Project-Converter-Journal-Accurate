@@ -4,9 +4,9 @@
 // =================================================================================
 
 // 1. Mengambil semua elemen dari HTML
-const receivableAccountInput = document.getElementById("receivableAccount");
-const salesAccountInput = document.getElementById("salesAccount");
-const salesTaxAccountInput = document.getElementById("salesTaxAccount");
+const payableAccountInput = document.getElementById("payableAccount");
+const purchaseAccountInput = document.getElementById("purchaseAccount");
+const purchaseTaxAccountInput = document.getElementById("purchaseTaxAccount");
 const xlsxFileInput = document.getElementById("taxInvoiceXLSX"); // Pastikan ID ini cocok dengan HTML
 const convertButton = document.getElementById("convertButton");
 const xmlOutput = document.getElementById("xmlOutput");
@@ -17,13 +17,13 @@ const journalMonth = document.getElementById("journalMonth");
 // 2. Menambahkan "pendengar acara" (event listener) pada tombol konversi
 convertButton.addEventListener("click", () => {
   // Mengambil nilai terbaru dari form
-  const receivableAcc = receivableAccountInput.value.trim();
-  const salesAcc = salesAccountInput.value.trim();
-  const salesTaxAcc = salesTaxAccountInput.value.trim();
+  const payableAcc = payableAccountInput.value.trim();
+  const purchaseAcc = purchaseAccountInput.value.trim();
+  const purchaseTaxAcc = purchaseTaxAccountInput.value.trim();
   const year = journalYear.value.trim();
   const month = journalMonth.value.trim().padStart(2, "0");
   // Validasi form
-  if (!receivableAcc || !salesAcc || !salesTaxAcc || !year || !month) {
+  if (!payableAcc || !purchaseAcc || !purchaseTaxAcc || !year || !month) {
     alert("Harap isi semua kolom Akun terlebih dahulu!");
     return;
   }
@@ -46,9 +46,9 @@ convertButton.addEventListener("click", () => {
       // Memanggil fungsi konversi. Kita tidak perlu lagi mengirim branchCode dari sini.
       const xmlString = convertDataToXml(
         jsonData,
-        receivableAcc,
-        salesAcc,
-        salesTaxAcc,
+        payableAcc,
+        purchaseAcc,
+        purchaseTaxAcc,
         year,
         month
       );
@@ -71,9 +71,9 @@ convertButton.addEventListener("click", () => {
  */
 function convertDataToXml(
   data,
-  receivableAcc,
-  salesAcc,
-  salesTaxAcc,
+  payableAcc,
+  purchaseAcc,
+  purchaseTaxAcc,
   year,
   month
 ) {
@@ -85,20 +85,14 @@ function convertDataToXml(
   for (const row of data) {
     const invoiceNo = row["Nomor Faktur Pajak"];
     const excelDate = row["Tanggal Faktur Pajak"];
-    const customerName = row["Nama Pembeli"];
-    const customerNo = row["NPWP Pembeli / Identitas lainnya"];
+    const vendorName = row["Nama Penjual"];
+    const vendorNo = row["NPWP Penjual"];
     const dpp = parseFloat(row["Harga Jual/Penggantian/DPP"]);
     const ppn = parseFloat(row["PPN"]);
     const index = String(i).padStart(3, "0");
-    const journalVoucherCode = `PENJ.${year}.${month}.${index}`;
+    const journalVoucherCode = `PEMB.${year}.${month}.${index}`;
 
-    if (
-      !invoiceNo ||
-      !customerName ||
-      isNaN(dpp) ||
-      isNaN(ppn) ||
-      !customerNo
-    ) {
+    if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
       console.warn(
         "Melewatkan baris karena data tidak lengkap atau tidak valid:",
         row
@@ -108,48 +102,48 @@ function convertDataToXml(
 
     const total = dpp + ppn;
     const date = formatDate(excelDate);
-    const transDescription = `${customerName} - ${customerNo} - ${invoiceNo}`;
+    const transDescription = `${vendorName} - ${vendorNo} - ${invoiceNo}`;
 
     let accountLines = "";
 
-    // Baris Jurnal 1: Akun Piutang (Debit)
+    // Baris Jurnal 1: Akun Pembelian (Debit)
     accountLines += `
             <ACCOUNTLINE operation="Add">
                 <KeyID>0</KeyID>
-                <GLACCOUNT>${receivableAcc}</GLACCOUNT>
-                <GLAMOUNT>${total}</GLAMOUNT>
-                <CUSTOMERNO>1000</CUSTOMERNO>
-                <DESCRIPTION>${customerName} - ${invoiceNo}</DESCRIPTION>
+                <GLACCOUNT>${purchaseAcc}</GLACCOUNT>
+                <GLAMOUNT>${dpp}</GLAMOUNT>
+                <DESCRIPTION>${vendorName} - ${invoiceNo}</DESCRIPTION>
                 <RATE>1</RATE>
-                <PRIMEAMOUNT>${total}</PRIMEAMOUNT>
+                <PRIMEAMOUNT>${dpp}</PRIMEAMOUNT>
                 <TXDATE/>
                 <POSTED/>
                 <CURRENCYNAME>IDR</CURRENCYNAME>
             </ACCOUNTLINE>`;
 
-    // Baris Jurnal 2: Akun Penjualan (Kredit)
+    // Baris Jurnal 2: Akun PPN (Debit)
     accountLines += `
             <ACCOUNTLINE operation="Add">
                 <KeyID>1</KeyID>
-                <GLACCOUNT>${salesAcc}</GLACCOUNT>
-                <GLAMOUNT>${-dpp}</GLAMOUNT> 
-                <DESCRIPTION>${customerName} - ${invoiceNo}</DESCRIPTION>
+                <GLACCOUNT>${purchaseTaxAcc}</GLACCOUNT>
+                <GLAMOUNT>${ppn}</GLAMOUNT> 
+                <DESCRIPTION>PPN 12% - ${vendorName}</DESCRIPTION>
                 <RATE>1</RATE>
-                <PRIMEAMOUNT>${-dpp}</PRIMEAMOUNT>
+                <PRIMEAMOUNT>${ppn}</PRIMEAMOUNT>
                 <TXDATE/>
                 <POSTED/>
                 <CURRENCYNAME>IDR</CURRENCYNAME>
             </ACCOUNTLINE>`;
 
-    // Baris Jurnal 3: Akun PPN (Kredit)
+    // Baris Jurnal 3: Akun Payable (Kredit)
     accountLines += `
             <ACCOUNTLINE operation="Add">
                 <KeyID>2</KeyID>
-                <GLACCOUNT>${salesTaxAcc}</GLACCOUNT>
-                <GLAMOUNT>${-ppn}</GLAMOUNT>
-                <DESCRIPTION>PPN 12% - ${customerName}</DESCRIPTION>
+                <GLACCOUNT>${payableAcc}</GLACCOUNT>
+                <GLAMOUNT>${-total}</GLAMOUNT>
+                <vendorNO>1000</vendorNO>
+                <DESCRIPTION>${vendorName} - ${invoiceNo}</DESCRIPTION>
                 <RATE>1</RATE>
-                <PRIMEAMOUNT>${-ppn}</PRIMEAMOUNT>
+                <PRIMEAMOUNT>${-total}</PRIMEAMOUNT>
                 <TXDATE/>
                 <POSTED/>
                 <CURRENCYNAME>IDR</CURRENCYNAME>

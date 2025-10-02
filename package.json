@@ -17,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/Vill0701/Project-Converter-Journal-Accurate/issues"
   },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "homepage": "https://github.com/Vill0701/Project-Converter-Journal-Accurate#readme"
 }

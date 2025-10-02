@@ -4,7 +4,10 @@
   "description": "This application will be used to convert data from our input and CSV tax invoice files, then generate it into an XML file that can be imported into Accurate 5.0.",
   "main": "script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
@@ -16,11 +19,6 @@
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Vill0701/Project-Converter-Journal-Accurate/issues"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
   },
   "homepage": "https://github.com/Vill0701/Project-Converter-Journal-Accurate#readme"
 }

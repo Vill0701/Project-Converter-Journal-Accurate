@@ -4,7 +4,7 @@
 // =================================================================================
 
 // 1. Mengambil semua elemen dari HTML
-const receivableAccountInput = document.getElementById("receivableAccount");
+const receiveableAccountInput = document.getElementById("receiveableAccount");
 const salesAccountInput = document.getElementById("salesAccount");
 const salesTaxAccountInput = document.getElementById("salesTaxAccount");
 const xlsxFileInput = document.getElementById("taxInvoiceXLSX"); // Pastikan ID ini cocok dengan HTML
@@ -13,15 +13,17 @@ const xmlOutput = document.getElementById("xmlOutput");
 const downloadLink = document.getElementById("downloadLink");
 const journalYear = document.getElementById("journalYear");
 const journalMonth = document.getElementById("journalMonth");
+let indexNumber = document.getElementById("index");
 
 // 2. Menambahkan "pendengar acara" (event listener) pada tombol konversi
 convertButton.addEventListener("click", () => {
   // Mengambil nilai terbaru dari form
-  const receivableAcc = receivableAccountInput.value.trim();
+  const receivableAcc = receiveableAccountInput.value.trim();
   const salesAcc = salesAccountInput.value.trim();
   const salesTaxAcc = salesTaxAccountInput.value.trim();
   const year = journalYear.value.trim();
   const month = journalMonth.value.trim().padStart(2, "0");
+  let indexNum = indexNumber.value.trim() || 1;
   // Validasi form
   if (!receivableAcc || !salesAcc || !salesTaxAcc || !year || !month) {
     alert("Harap isi semua kolom Akun terlebih dahulu!");
@@ -50,7 +52,8 @@ convertButton.addEventListener("click", () => {
         salesAcc,
         salesTaxAcc,
         year,
-        month
+        month,
+        indexNum
       );
 
       xmlOutput.textContent = xmlString;
@@ -75,21 +78,31 @@ function convertDataToXml(
   salesAcc,
   salesTaxAcc,
   year,
-  month
+  month,
+  indexNum
 ) {
   const branchCode = "1472498169";
   let transactions = "";
   let requestId = 1;
-  let i = 1;
 
   for (const row of data) {
-    const invoiceNo = row["Nomor Faktur Pajak"];
-    const excelDate = row["Tanggal Faktur Pajak"];
-    const customerName = row["Nama Pembeli"];
-    const customerNo = row["NPWP Pembeli / Identitas lainnya"];
-    const dpp = parseFloat(row["Harga Jual/Penggantian/DPP"]);
-    const ppn = parseFloat(row["PPN"]);
-    const index = String(i).padStart(3, "0");
+    const invoiceNo =
+      row["Nomor Faktur Pajak"] ??
+      row["Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Nomor"];
+    const excelDate =
+      row["Tanggal Faktur Pajak"] ??
+      row["Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Tanggal"];
+    const customerName =
+      row["Nama Pembeli"] ??
+      row["Nama Pembeli BKP/Penerima Manfaat BKP Tidak Berwujud/Penerima JKP"];
+    const customerNo =
+      row["NPWP Pembeli / Identitas lainnya"] ?? row["NPWP/NIK/Nomor Paspor"];
+    const dpp = parseFloat(
+      row["Harga Jual/Penggantian/DPP"] ??
+        row["Harga Jual/Penggantian/DPP (Rupiah)"]
+    );
+    const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
+    const index = String(indexNum).padStart(3, "0");
     const journalVoucherCode = `PENJ.${year}.${month}.${index}`;
 
     if (
@@ -166,7 +179,7 @@ function convertDataToXml(
             <TRANSDESCRIPTION>${transDescription}</TRANSDESCRIPTION>
             <JVAMOUNT>${total}</JVAMOUNT>
         </JV>`;
-    i++;
+    indexNum++;
     requestId++;
   }
 

@@ -13,6 +13,7 @@ const xmlOutput = document.getElementById("xmlOutput");
 const downloadLink = document.getElementById("downloadLink");
 const journalYear = document.getElementById("journalYear");
 const journalMonth = document.getElementById("journalMonth");
+let indexNumber = document.getElementById("index");
 
 // 2. Menambahkan "pendengar acara" (event listener) pada tombol konversi
 convertButton.addEventListener("click", () => {
@@ -22,6 +23,8 @@ convertButton.addEventListener("click", () => {
   const purchaseTaxAcc = purchaseTaxAccountInput.value.trim();
   const year = journalYear.value.trim();
   const month = journalMonth.value.trim().padStart(2, "0");
+  let indexNum = indexNumber.value.trim() || 1;
+
   // Validasi form
   if (!payableAcc || !purchaseAcc || !purchaseTaxAcc || !year || !month) {
     alert("Harap isi semua kolom Akun terlebih dahulu!");
@@ -50,7 +53,8 @@ convertButton.addEventListener("click", () => {
         purchaseAcc,
         purchaseTaxAcc,
         year,
-        month
+        month,
+        indexNum
       );
 
       xmlOutput.textContent = xmlString;
@@ -75,21 +79,36 @@ function convertDataToXml(
   purchaseAcc,
   purchaseTaxAcc,
   year,
-  month
+  month,
+  indexNum
 ) {
   const branchCode = "1472498169";
   let transactions = "";
   let requestId = 1;
-  let i = 1;
 
   for (const row of data) {
-    const invoiceNo = row["Nomor Faktur Pajak"];
-    const excelDate = row["Tanggal Faktur Pajak"];
-    const vendorName = row["Nama Penjual"];
-    const vendorNo = row["NPWP Penjual"];
-    const dpp = parseFloat(row["Harga Jual/Penggantian/DPP"]);
-    const ppn = parseFloat(row["PPN"]);
-    const index = String(i).padStart(3, "0");
+    const invoiceNo =
+      row["Nomor Faktur Pajak"] ??
+      row["Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Nomor"] ??
+      row["Dokumen Tertentu - Nomor"];
+    const excelDate =
+      row["Tanggal Faktur Pajak"] ??
+      row[
+        "Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Tanggal"
+      ] ??
+      row["Dokumen Tertentu - Tanggal"];
+    const vendorName =
+      row["Nama Penjual"] ??
+      row[
+        "Nama Penjual Barang Kena Pajak/Barang Kena Pajak Tidak Berwujud/Jasa Kena Pajak"
+      ];
+    const vendorNo = row["NPWP Penjual"] ?? row["NPWP"];
+    const dpp = parseFloat(
+      row["Harga Jual/Penggantian/DPP"] ??
+        row["Harga Jual/Penggantian/DPP (Rupiah)"]
+    );
+    const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
+    const index = String(indexNum).padStart(3, "0");
     const journalVoucherCode = `PEMB.${year}.${month}.${index}`;
 
     if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
@@ -160,7 +179,7 @@ function convertDataToXml(
             <TRANSDESCRIPTION>${transDescription}</TRANSDESCRIPTION>
             <JVAMOUNT>${total}</JVAMOUNT>
         </JV>`;
-    i++;
+    indexNum++;
     requestId++;
   }
 

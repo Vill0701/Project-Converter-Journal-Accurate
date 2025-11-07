@@ -6,7 +6,6 @@
 // 1. Mengambil semua elemen dari HTML
 const payableAccountInput = document.getElementById("payableAccount");
 const purchaseAccountInput = document.getElementById("purchaseAccount");
-const purchaseTaxAccountInput = document.getElementById("purchaseTaxAccount");
 const xlsxFileInput = document.getElementById("taxInvoiceXLSX"); // Pastikan ID ini cocok dengan HTML
 const convertButton = document.getElementById("convertButton");
 const xmlOutput = document.getElementById("xmlOutput");
@@ -20,13 +19,12 @@ convertButton.addEventListener("click", () => {
   // Mengambil nilai terbaru dari form
   const payableAcc = payableAccountInput.value.trim();
   const purchaseAcc = purchaseAccountInput.value.trim();
-  const purchaseTaxAcc = purchaseTaxAccountInput.value.trim();
   const year = journalYear.value.trim();
   const month = journalMonth.value.trim().padStart(2, "0");
   let indexNum = indexNumber.value.trim() || 1;
 
   // Validasi form
-  if (!payableAcc || !purchaseAcc || !purchaseTaxAcc || !year || !month) {
+  if (!payableAcc || !purchaseAcc || !year || !month) {
     alert("Harap isi semua kolom Akun terlebih dahulu!");
     return;
   }
@@ -51,7 +49,6 @@ convertButton.addEventListener("click", () => {
         jsonData,
         payableAcc,
         purchaseAcc,
-        purchaseTaxAcc,
         year,
         month,
         indexNum
@@ -77,7 +74,6 @@ function convertDataToXml(
   data,
   payableAcc,
   purchaseAcc,
-  purchaseTaxAcc,
   year,
   month,
   indexNum
@@ -104,15 +100,20 @@ function convertDataToXml(
       ] ??
       row["Nama Penjual BKP/BKP Tidak Berwujud/Pemberi JKP"];
     const vendorNo = row["NPWP Penjual"] ?? row["NPWP"];
-    const dpp = parseFloat(
+    const dpp = parseInt(
       row["Harga Jual/Penggantian/DPP"] ??
         row["Harga Jual/Penggantian/DPP (Rupiah)"] ??
-        row["DPP (Rupiah)"]
+        row["DPP (Rupiah)"] ??
+        row["Harga Jual/Penggantian/Nilai Impor/DPP (Rupiah)"]
     );
-    const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
+    const ppn = parseInt(row["PPN"] ?? row["PPN (Rupiah)"]);
     const index = String(indexNum).padStart(3, "0");
-    const journalVoucherCode = `PEMB.${year}.${month}.${index}`;
-
+    const journalVoucherCode = `PEMB.NON.${year}.${month}.${index}`;
+    console.log(invoiceNo);
+    console.log(vendorName);
+    console.log(dpp);
+    console.log(ppn);
+    console.log(vendorNo);
     if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
       console.warn(
         "Melewatkan baris karena data tidak lengkap atau tidak valid:",
@@ -132,7 +133,7 @@ function convertDataToXml(
             <ACCOUNTLINE operation="Add">
                 <KeyID>0</KeyID>
                 <GLACCOUNT>${purchaseAcc}</GLACCOUNT>
-                <GLAMOUNT>${dpp}</GLAMOUNT>
+                <GLAMOUNT>${total}</GLAMOUNT>
                 <DESCRIPTION>${vendorName} - ${invoiceNo}</DESCRIPTION>
                 <RATE>1</RATE>
                 <PRIMEAMOUNT>${dpp}</PRIMEAMOUNT>
@@ -141,21 +142,7 @@ function convertDataToXml(
                 <CURRENCYNAME>IDR</CURRENCYNAME>
             </ACCOUNTLINE>`;
 
-    // Baris Jurnal 2: Akun PPN (Debit)
-    accountLines += `
-            <ACCOUNTLINE operation="Add">
-                <KeyID>1</KeyID>
-                <GLACCOUNT>${purchaseTaxAcc}</GLACCOUNT>
-                <GLAMOUNT>${ppn}</GLAMOUNT> 
-                <DESCRIPTION>PPN 12% - ${vendorName}</DESCRIPTION>
-                <RATE>1</RATE>
-                <PRIMEAMOUNT>${ppn}</PRIMEAMOUNT>
-                <TXDATE/>
-                <POSTED/>
-                <CURRENCYNAME>IDR</CURRENCYNAME>
-            </ACCOUNTLINE>`;
-
-    // Baris Jurnal 3: Akun Payable (Kredit)
+    // Baris Jurnal 2: Akun Payable (Kredit)
     accountLines += `
             <ACCOUNTLINE operation="Add">
                 <KeyID>2</KeyID>

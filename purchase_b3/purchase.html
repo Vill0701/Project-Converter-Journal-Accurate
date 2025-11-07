@@ -9,12 +9,16 @@
   </head>
   <body>
     <main class="container">
-      <h1>Faktur Pajak Masukan B2</h1>
+      <h1>Faktur Pajak Masukan B3</h1>
       <p>Masukan nomor akun yang sesuai dengan Database Accurate anda!</p>
       <div class="form-group">
         <div class="form-row">
           <label for="index">Journal Index Number</label>
-          <input type="text" id="index" />
+          <input
+            type="text"
+            id="index"
+            placeholder="Contoh Journal No: PEMB.YY.MM.INDEX"
+          />
         </div>
         <div class="form-row">
           <label for="journalYear">Tahun Jurnal (YY): </label>
@@ -56,7 +60,13 @@
         </div>
         <div class="form-row">
           <label for="purchaseTaxAccount">Akun PPN Pembelian :</label>
-          <input list="accountList" type="text" id="purchaseTaxAccount" />
+          <input
+            list="accountList"
+            type="text"
+            id="purchaseTaxAccount"
+            placeholder="Pembelian B3 PPn tidak dikreditkan"
+            disabled
+          />
         </div>
         <datalist id="accountList">
           <option value="210102">Akun Payable</option>
@@ -82,8 +92,8 @@
         <a href="../purchase_b1/purchase.html" id="purchaseTaxInvoice"
           >Faktur Pajak Keluaran B1</a
         >
-        <a href="../purchase_b3/purchase.html" id="purchaseTaxInvoice"
-          >Faktur Pajak Masukan B3</a
+        <a href="../purchase/purchase.html" id="purchaseTaxInvoice"
+          >Faktur Pajak Masukan B2</a
         >
       </div>
     </main>

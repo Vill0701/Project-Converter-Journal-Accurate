@@ -30,6 +30,16 @@ p {
   color: #333;
 }
 
+#purchaseTaxInvoice {
+  background-color: #28a745;
+  padding: 10px 15px;
+  border-radius: 5px;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
 .form-group {
   display: grid;
   grid-template-columns: 1fr 1fr; /* Buat 2 kolom dengan lebar yang sama */
@@ -112,7 +122,7 @@ pre {
   margin-top: 20px;
 }
 
-#purchaseTaxInvoice {
+#salesTaxInvoice {
   background-color: #28a745;
   padding: 10px 15px;
   border-radius: 5px;
@@ -122,7 +132,7 @@ pre {
   transition: background-color 0.2s;
 }
 
-#purchaseTaxInvoice:hover {
+#salesTaxInvoice:hover {
   background-color: #1d7832;
 }
 

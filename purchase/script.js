@@ -101,11 +101,13 @@ function convertDataToXml(
       row["Nama Penjual"] ??
       row[
         "Nama Penjual Barang Kena Pajak/Barang Kena Pajak Tidak Berwujud/Jasa Kena Pajak"
-      ];
+      ] ??
+      row["Nama Penjual BKP/BKP Tidak Berwujud/Pemberi JKP"];
     const vendorNo = row["NPWP Penjual"] ?? row["NPWP"];
     const dpp = parseFloat(
       row["Harga Jual/Penggantian/DPP"] ??
-        row["Harga Jual/Penggantian/DPP (Rupiah)"]
+        row["Harga Jual/Penggantian/DPP (Rupiah)"] ??
+        row["DPP (Rupiah)"]
     );
     const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
     const index = String(indexNum).padStart(3, "0");

@@ -111,7 +111,7 @@ function convertDataToXml(
     );
     const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
     const index = String(indexNum).padStart(3, "0");
-    const journalVoucherCode = `PEMB.${year}.${month}.${index}`;
+    const journalVoucherCode = `PIB.${year}.${month}.${index}`;
 
     if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
       console.warn(

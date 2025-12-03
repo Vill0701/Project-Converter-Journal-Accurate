@@ -1,23 +1,29 @@
-// =================================================================================
-// Partner Coding - XLSX to NMEXML Converter for Accurate
-// Versi Final (dengan Branch Code Default)
-// =================================================================================
+// =================================================================
+// KONFIGURASI KATEGORI: PURCHASE B1
+// =================================================================
+const APP_CATEGORY = "purchase_b2";
+// =================================================================
 
-// 1. Mengambil semua elemen dari HTML
+// 1. Mengambil elemen HTML (Sesuai ID di purchase.html kamu)
 const payableAccountInput = document.getElementById("payableAccount");
 const purchaseAccountInput = document.getElementById("purchaseAccount");
 const purchaseTaxAccountInput = document.getElementById("purchaseTaxAccount");
-const xlsxFileInput = document.getElementById("taxInvoiceXLSX"); // Pastikan ID ini cocok dengan HTML
+const xlsxFileInput = document.getElementById("taxInvoiceXLSX");
 const convertButton = document.getElementById("convertButton");
 const xmlOutput = document.getElementById("xmlOutput");
 const downloadLink = document.getElementById("downloadLink");
 const journalYear = document.getElementById("journalYear");
 const journalMonth = document.getElementById("journalMonth");
 let indexNumber = document.getElementById("index");
+const historyList = document.getElementById("historyList"); // Pastikan <ul> ini ada di HTML
 
-// 2. Menambahkan "pendengar acara" (event listener) pada tombol konversi
+// 2. Load History saat halaman dibuka
+document.addEventListener("DOMContentLoaded", () => {
+  loadHistory();
+});
+
+// 3. Event Listener Tombol Convert
 convertButton.addEventListener("click", () => {
-  // Mengambil nilai terbaru dari form
   const payableAcc = payableAccountInput.value.trim();
   const purchaseAcc = purchaseAccountInput.value.trim();
   const purchaseTaxAcc = purchaseTaxAccountInput.value.trim();
@@ -46,7 +52,7 @@ convertButton.addEventListener("click", () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      // Memanggil fungsi konversi. Kita tidak perlu lagi mengirim branchCode dari sini.
+      // Konversi Data (Menggunakan Logika Purchase)
       const xmlString = convertDataToXml(
         jsonData,
         payableAcc,
@@ -59,20 +65,143 @@ convertButton.addEventListener("click", () => {
 
       xmlOutput.textContent = xmlString;
       setupDownloadLink(xmlString);
+
+      // SIMPAN KE DATABASE (Kategori: purchase_b1)
+      const generatedFilename = `${APP_CATEGORY}_${year}${month}_${Date.now()}.xml`;
+      saveToDatabase(generatedFilename, xmlString);
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan saat memproses file Excel: " + error.message);
-      xmlOutput.textContent =
-        "Gagal memproses file. Pastikan format kolom di file Excel sudah benar.";
+      alert("Terjadi kesalahan saat memproses file: " + error.message);
     }
   };
 
   reader.readAsArrayBuffer(file);
 });
 
-/**
- * Fungsi utama untuk mengubah data menjadi XML.
- */
+// --- FUNGSI DATABASE (SAMA UNTUK SEMUA APP) ---
+
+function saveToDatabase(filename, content) {
+  if (!content) return;
+
+  // GANTI '/api/save' MENJADI ALAMAT LENGKAP INI:
+  fetch("http://localhost:3000/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      category: APP_CATEGORY,
+      filename: filename,
+      xml_content: content,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("Gagal menyimpan ke server");
+      return response.json();
+    })
+    .then((data) => {
+      loadHistory(); // Refresh list otomatis
+    })
+    .catch((err) => {
+      console.error("Gagal menyimpan:", err);
+      alert("Gagal menyimpan riwayat.");
+    });
+}
+
+function loadHistory() {
+  if (!historyList) return;
+
+  // Fetch data KHUSUS 'purchase_b1'
+  fetch(`http://localhost:3000/api/history/${APP_CATEGORY}`)
+    .then((res) => res.json())
+    .then((data) => {
+      historyList.innerHTML = "";
+
+      if (data.length === 0) {
+        historyList.innerHTML =
+          "<li style='padding:10px;'>Belum ada riwayat file Purchase B2.</li>";
+        return;
+      }
+
+      data.forEach((item) => {
+        const li = document.createElement("li");
+        li.style.cssText =
+          "border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center;";
+
+        const dateStr = new Date(item.created_at).toLocaleString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        li.innerHTML = `
+           <div>
+                <strong style="color: #333;">${item.filename}</strong><br>
+                <small style="color: #666;">${dateStr}</small>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="downloadFromHistory(${item.id}, '${item.filename}')" 
+                        style="background-color: #28a745; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 14px;">
+                    Unduh
+                </button>
+                
+                <button onclick="deleteHistory(${item.id})" 
+                        style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 14px;">
+                    Hapus
+                </button>
+            </div>
+        `;
+        historyList.appendChild(li);
+      });
+    })
+    .catch((err) => console.error("Gagal memuat history:", err));
+}
+
+window.downloadFromHistory = function (id, filename) {
+  fetch(`http://localhost:3000/api/download/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const blob = new Blob([data.xml_content], { type: "application/xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    })
+    .catch((err) => alert("Gagal mengunduh file: " + err));
+};
+
+window.deleteHistory = function (id) {
+  // Konfirmasi dulu agar tidak terhapus tidak sengaja
+  if (!confirm("Apakah Anda yakin ingin menghapus file ini dari riwayat?")) {
+    return;
+  }
+
+  fetch(`http://localhost:3000/api/history/${id}`, {
+    method: "DELETE",
+  })
+    .then((response) => {
+      if (response.ok) {
+        loadHistory(); // Refresh list setelah dihapus
+      } else {
+        alert("Gagal menghapus data.");
+      }
+    })
+    .catch((err) => alert("Error server: " + err));
+};
+
+function setupDownloadLink(xmlString) {
+  const blob = new Blob([xmlString], { type: "application/xml" });
+  const url = URL.createObjectURL(blob);
+  downloadLink.href = url;
+  downloadLink.download = "import_journal_voucher.xml";
+  downloadLink.classList.remove("hidden");
+}
+
+// --- LOGIKA KONVERSI XML (KHUSUS PURCHASE) ---
 function convertDataToXml(
   data,
   payableAcc,
@@ -87,6 +216,7 @@ function convertDataToXml(
   let requestId = 1;
 
   for (const row of data) {
+    // Mapping Kolom Excel
     const invoiceNo =
       row["Nomor Faktur Pajak"] ??
       row["Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Nomor"] ??
@@ -110,25 +240,24 @@ function convertDataToXml(
         row["DPP (Rupiah)"]
     );
     const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
+
     const index = String(indexNum).padStart(3, "0");
     const journalVoucherCode = `PEMB.${year}.${month}.${index}`;
 
     if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
-      console.warn(
-        "Melewatkan baris karena data tidak lengkap atau tidak valid:",
-        row
-      );
       continue;
     }
 
     const total = dpp + ppn;
     const date = formatDate(excelDate);
-    const transDescription = `${vendorName}\n ${vendorNo}\n ${invoiceNo}`;
+    const transDescription = `${vendorName} - ${vendorNo} - ${invoiceNo}`;
 
-    let accountLines = "";
+    // --- STRUKTUR JURNAL PEMBELIAN (PURCHASE) ---
+    // 1. Akun Pembelian (Debit +)
+    // 2. Akun PPN Masukan (Debit +)
+    // 3. Akun Hutang/Payable (Kredit -)
 
-    // Baris Jurnal 1: Akun Pembelian (Debit)
-    accountLines += `
+    let accountLines = `
             <ACCOUNTLINE operation="Add">
                 <KeyID>0</KeyID>
                 <GLACCOUNT>${purchaseAcc}</GLACCOUNT>
@@ -139,10 +268,7 @@ function convertDataToXml(
                 <TXDATE/>
                 <POSTED/>
                 <CURRENCYNAME>IDR</CURRENCYNAME>
-            </ACCOUNTLINE>`;
-
-    // Baris Jurnal 2: Akun PPN (Debit)
-    accountLines += `
+            </ACCOUNTLINE>
             <ACCOUNTLINE operation="Add">
                 <KeyID>1</KeyID>
                 <GLACCOUNT>${purchaseTaxAcc}</GLACCOUNT>
@@ -153,15 +279,12 @@ function convertDataToXml(
                 <TXDATE/>
                 <POSTED/>
                 <CURRENCYNAME>IDR</CURRENCYNAME>
-            </ACCOUNTLINE>`;
-
-    // Baris Jurnal 3: Akun Payable (Kredit)
-    accountLines += `
+            </ACCOUNTLINE>
             <ACCOUNTLINE operation="Add">
                 <KeyID>2</KeyID>
                 <GLACCOUNT>${payableAcc}</GLACCOUNT>
                 <GLAMOUNT>${-total}</GLAMOUNT>
-                <vendorNO>1000</vendorNO>
+                <vendorNO>1000</vendorNO> 
                 <DESCRIPTION>${vendorName} - ${invoiceNo}</DESCRIPTION>
                 <RATE>1</RATE>
                 <PRIMEAMOUNT>${-total}</PRIMEAMOUNT>
@@ -185,18 +308,9 @@ function convertDataToXml(
     requestId++;
   }
 
-  // Menggunakan variabel branchCode yang sudah kita atur di atas
-  return `<?xml version="1.0"?>
-<NMEXML EximID="1" BranchCode="${branchCode}" ACCOUNTANTCOPYID="">
-    <TRANSACTIONS OnError="CONTINUE">
-        ${transactions}
-    </TRANSACTIONS>
-</NMEXML>`;
+  return `<?xml version="1.0"?>\n<NMEXML EximID="1" BranchCode="${branchCode}" ACCOUNTANTCOPYID="">\n<TRANSACTIONS OnError="CONTINUE">\n${transactions}\n</TRANSACTIONS>\n</NMEXML>`;
 }
 
-/**
- * Fungsi pembantu untuk format tanggal.
- */
 function formatDate(serial) {
   if (
     typeof serial === "string" &&
@@ -218,16 +332,4 @@ function formatDate(serial) {
     return `${year}-${month}-${day}`;
   }
   return serial;
-}
-
-/**
- * Fungsi untuk menyiapkan link unduhan file XML.
- */
-function setupDownloadLink(xmlString) {
-  const blob = new Blob([xmlString], { type: "application/xml" });
-  const url = URL.createObjectURL(blob);
-
-  downloadLink.href = url;
-  downloadLink.download = "import_journal_voucher.xml";
-  downloadLink.classList.remove("hidden");
 }

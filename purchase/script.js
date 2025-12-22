@@ -233,7 +233,7 @@ function convertDataToXml(
         "Nama Penjual Barang Kena Pajak/Barang Kena Pajak Tidak Berwujud/Jasa Kena Pajak"
       ] ??
       row["Nama Penjual BKP/BKP Tidak Berwujud/Pemberi JKP"];
-    const vendorNo = row["NPWP Penjual"] ?? row["NPWP"];
+    const vendorNo = row["Nomor Identitas WP"] ?? row["NPWP Penjual"] ?? row["NPWP"];
     const dpp = parseFloat(
       row["Harga Jual/Penggantian/DPP"] ??
         row["Harga Jual/Penggantian/DPP (Rupiah)"] ??

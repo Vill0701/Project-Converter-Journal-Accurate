@@ -3,9 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Converter FP to XML(Accurate5)</title>
+    <title>Converter FP to XML (Accurate5)</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      /* Sedikit tambahan gaya untuk info template agar rapi */
+      .template-info {
+        background-color: #f9f9f9;
+        border-left: 4px solid #007bff;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+      }
+      .template-info code {
+        display: block;
+        margin-top: 5px;
+        color: #d63384;
+        word-wrap: break-word;
+      }
+    </style>
   </head>
   <body>
     <main class="container">
@@ -35,14 +51,6 @@
             <option value="01">Januari</option>
             <option value="02">Februari</option>
             <option value="03">Maret</option>
-            <option value="04">April</option>
-            <option value="05">Mei</option>
-            <option value="06">Juni</option>
-            <option value="07">Juli</option>
-            <option value="08">Agustus</option>
-            <option value="09">September</option>
-            <option value="10">Oktober</option>
-            <option value="11">November</option>
             <option value="12">Desember</option>
           </datalist>
         </div>
@@ -66,33 +74,36 @@
           <option value="5000.04">Akun Pembelian Consumable</option>
           <option value="1600.01">Akun PPN Pembelian</option>
         </datalist>
+
+        <div class="template-info">
+          <strong>Penting:</strong> Pastikan header baris pertama di file Excel Anda memiliki susunan berikut:
+          <code>NPWP Penjual | Nama Penjual | Nomor Dokumen | Tanggal Dokumen | Jenis Transaksi | Masa Pajak | Tahun | Masa Pajak Pengkreditkan | Tahun Pajak Pengkreditan | DPP / Penghasilan Kotor | PPN | PPnBM | Status | Valid | Dilaporkan | Keterangan | Perekam | Dibuat Oleh | IsShowClearName</code>
+        </div>
+
         <div class="form-row">
-          <label for="taxInvoiceCSV">Import File XLSX :</label>
+          <label for="taxInvoiceXLSX">Import File XLSX :</label>
           <input type="file" id="taxInvoiceXLSX" accept=".xlsx, .xls" />
         </div>
         <button id="convertButton">Konversi ke XML</button>
       </div>
+
       <div class="container-result">
         <h2>Hasil XML:</h2>
         <pre><code id="xmlOutput">Hasil konversi akan muncul di sini...</code></pre>
         <a id="downloadLink" class="hidden">Unduh File XML</a>
       </div>
+
       <div class="history-section">
         <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #ccc" />
         <h3 style="margin-bottom: 10px">Riwayat File Tersimpan</h3>
-
         <ul id="historyList" style="list-style: none; padding: 0; margin: 0">
           <li style="color: gray">Memuat data...</li>
         </ul>
       </div>
       <div class="container-next-page">
         <a href="../index.html" id="salesTaxInvoice">Faktur Pajak Keluaran</a>
-        <a href="../purchase/purchase.html" id="purchaseTaxInvoice"
-          >Faktur Pajak Masukan B2</a
-        >
-        <a href="../purchase_b3/purchase.html" id="purchaseTaxInvoice"
-          >Faktur Pajak Masukan B3</a
-        >
+        <a href="../purchase/purchase.html" id="purchaseTaxInvoice">Faktur Pajak Masukan B2</a>
+        <a href="../purchase_b3/purchase.html" id="purchaseTaxInvoice">Faktur Pajak Masukan B3</a>
       </div>
     </main>
 

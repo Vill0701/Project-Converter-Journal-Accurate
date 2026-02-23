@@ -15,7 +15,7 @@ const downloadLink = document.getElementById("downloadLink");
 const journalYear = document.getElementById("journalYear");
 const journalMonth = document.getElementById("journalMonth");
 let indexNumber = document.getElementById("index");
-const historyList = document.getElementById("historyList"); // Pastikan <ul> ini ada di HTML
+const historyList = document.getElementById("historyList");
 
 // 2. Load History saat halaman dibuka
 document.addEventListener("DOMContentLoaded", () => {
@@ -51,6 +51,7 @@ convertButton.addEventListener("click", () => {
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
+      // Mengubah Excel ke JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       // Konversi Data (Menggunakan Logika PIB/B1)
@@ -73,8 +74,7 @@ convertButton.addEventListener("click", () => {
     } catch (error) {
       console.error(error);
       alert("Terjadi kesalahan saat memproses file Excel: " + error.message);
-      xmlOutput.textContent =
-        "Gagal memproses file. Pastikan format kolom di file Excel sudah benar.";
+      xmlOutput.textContent = "Gagal memproses file. Pastikan format kolom di file Excel sudah benar.";
     }
   };
 
@@ -111,22 +111,19 @@ function saveToDatabase(filename, content) {
 function loadHistory() {
   if (!historyList) return;
 
-  // Fetch data KHUSUS 'purchase_b1'
   fetch(`http://localhost:3000/api/history/${APP_CATEGORY}`)
     .then((res) => res.json())
     .then((data) => {
       historyList.innerHTML = "";
 
       if (data.length === 0) {
-        historyList.innerHTML =
-          "<li style='padding:10px;'>Belum ada riwayat file Purchase B1.</li>";
+        historyList.innerHTML = "<li style='padding:10px;'>Belum ada riwayat file Purchase B1.</li>";
         return;
       }
 
       data.forEach((item) => {
         const li = document.createElement("li");
-        li.style.cssText =
-          "border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center;";
+        li.style.cssText = "border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center;";
 
         const dateStr = new Date(item.created_at).toLocaleString("id-ID", {
           day: "numeric",
@@ -146,7 +143,6 @@ function loadHistory() {
                         style="background-color: #28a745; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 14px;">
                     Unduh
                 </button>
-                
                 <button onclick="deleteHistory(${item.id})" 
                         style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 14px;">
                     Hapus
@@ -199,45 +195,22 @@ function convertDataToXml(
   let requestId = 1;
 
   for (const row of data) {
-    // Mapping Kolom Excel (Komplit sesuai kode kamu)
-    const invoiceNo =
-      row["Nomor Faktur Pajak"] ??
-      row["Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Nomor"] ??
-      row["Dokumen Tertentu - Nomor"];
-
-    const excelDate =
-      row["Tanggal Faktur Pajak"] ??
-      row[
-        "Faktur Pajak/Dokumen Tertentu/Nota Retur/Nota Pembatalan - Tanggal"
-      ] ??
-      row["Dokumen Tertentu - Tanggal"];
-
-    const vendorName =
-      row["Nama Penjual"] ??
-      row[
-        "Nama Penjual Barang Kena Pajak/Barang Kena Pajak Tidak Berwujud/Jasa Kena Pajak"
-      ] ??
-      row["Nama Penjual BKP/BKP Tidak Berwujud/Pemberi JKP"];
-
-    const vendorNo = row["Nomor Identitas WP"] ?? row["NPWP Penjual"] ?? row["NPWP"];
-
-    const dpp = parseFloat(
-      row["Harga Jual/Penggantian/DPP"] ??
-        row["Harga Jual/Penggantian/DPP (Rupiah)"] ??
-        row["DPP (Rupiah)"]
-    );
-
-    const ppn = parseFloat(row["PPN"] ?? row["PPN (Rupiah)"]);
+    // Mapping Kolom Excel disesuaikan dengan template terbaru
+    const invoiceNo = row["Nomor Dokumen"];
+    const excelDate = row["Tanggal Dokumen"];
+    const vendorName = row["Nama Penjual"];
+    const vendorNo = row["NPWP Penjual"];
+    
+    // ParseFloat digunakan untuk memastikan tipe data berupa angka
+    const dpp = parseFloat(row["DPP / Penghasilan Kotor"]);
+    const ppn = parseFloat(row["PPN"]);
 
     const index = String(indexNum).padStart(3, "0");
-    // Gunakan PIB sesuai request
     const journalVoucherCode = `PIB.${year}.${month}.${index}`;
 
+    // Validasi per baris, lewati baris jika data kosong atau tidak valid
     if (!invoiceNo || !vendorName || isNaN(dpp) || isNaN(ppn) || !vendorNo) {
-      console.warn(
-        "Melewatkan baris karena data tidak lengkap atau tidak valid:",
-        row
-      );
+      console.warn("Melewatkan baris karena data tidak lengkap atau tidak valid:", row);
       continue;
     }
 
@@ -275,7 +248,7 @@ function convertDataToXml(
                 <CURRENCYNAME>IDR</CURRENCYNAME>
             </ACCOUNTLINE>`;
 
-    // Baris Jurnal 3: Akun Payable (Kredit)
+    // Baris Jurnal 3: Akun Payable (Kredit - nilainya minus)
     accountLines += `
             <ACCOUNTLINE operation="Add">
                 <KeyID>2</KeyID>
@@ -301,6 +274,7 @@ function convertDataToXml(
             <TRANSDESCRIPTION>${transDescription}</TRANSDESCRIPTION>
             <JVAMOUNT>${total}</JVAMOUNT>
         </JV>`;
+    
     indexNum++;
     requestId++;
   }
@@ -314,10 +288,7 @@ function convertDataToXml(
 }
 
 function formatDate(serial) {
-  if (
-    typeof serial === "string" &&
-    (serial.includes("-") || serial.includes("/"))
-  ) {
+  if (typeof serial === "string" && (serial.includes("-") || serial.includes("/"))) {
     const d = new Date(serial);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
